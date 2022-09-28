@@ -7,17 +7,25 @@
 
 import UIKit
 
+
 final class WelcomeViewController: UIViewController {
     
+    let colorPaletteView = ColorPaletteView()
+    var colorHidden: Bool = true
     private let commentLabel = UILabel()
+    var commentView = UIView()
     private let valueLabel = UILabel()
     private var value: Int = 0
-    
     let incrementButton = UIButton()
+    
+    var colorsButton = UIButton()
+    var notesButton = UIButton()
+    var newsButton = UIButton()
+    
+    var buttonsSV = UIStackView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupView()
         setupMenuButtons()
     }
@@ -27,7 +35,13 @@ final class WelcomeViewController: UIViewController {
         view.addSubview(setupCommentView())
         setupIncrementButton()
         setupValueLabel()
+        commentView.isHidden = true
+        colorPaletteView.isHidden = true
+        setupMenuButtons()
+        setupColorControlSV()
     }
+    
+    
     
     private func makeMenuButton(title: String) -> UIButton {
         let button = UIButton()
@@ -44,12 +58,15 @@ final class WelcomeViewController: UIViewController {
     }
     
     private func setupMenuButtons() {
-        let colorsButton = makeMenuButton(title: "🎨")
-        let notesButton = makeMenuButton(title: "📔")
-        let newsButton = makeMenuButton(title: "📑")
+        colorsButton = makeMenuButton(title: "🎨")
+        colorsButton.addTarget(self, action:
+                                #selector(paletteButtonPressed), for: .touchUpInside)
         
-        let buttonsSV = UIStackView(arrangedSubviews:
-                                        [colorsButton, notesButton, newsButton])
+        notesButton = makeMenuButton(title: "📔")
+        newsButton = makeMenuButton(title: "📑")
+        
+        buttonsSV = UIStackView(arrangedSubviews:
+                                    [colorsButton, notesButton, newsButton])
         buttonsSV.spacing = 12
         buttonsSV.axis = .horizontal
         buttonsSV.distribution = .fillEqually
@@ -57,6 +74,41 @@ final class WelcomeViewController: UIViewController {
         buttonsSV.pin(to: self.view, [.left: 24, .right: 24])
         buttonsSV.pinBottom(to:
                                 self.view.safeAreaLayoutGuide.bottomAnchor, 24)
+    }
+    
+    private func setupColorControlSV() {
+        colorPaletteView.isHidden = true
+        view.addSubview(colorPaletteView)
+        colorPaletteView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            colorPaletteView.topAnchor.constraint(equalTo:
+                                                    incrementButton.bottomAnchor, constant: 8),
+            colorPaletteView.leadingAnchor.constraint(equalTo:
+                                                        view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
+            colorPaletteView.trailingAnchor.constraint(equalTo:
+                                                        view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            colorPaletteView.bottomAnchor.constraint(equalTo:
+                                                        buttonsSV.topAnchor, constant: -8)
+        ])
+    }
+    
+    @objc
+    private func paletteButtonPressed() {
+        colorPaletteView.isHidden.toggle()
+        colorHidden.toggle()
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        self.view.backgroundColor = colorPaletteView.chosenColor
+        colorPaletteView.addTarget(self, action:
+                                    #selector(changeColor(_:)), for: .touchDragInside)
+        
+    }
+    
+    @objc
+    private func changeColor(_ slider: ColorPaletteView) {
+        UIView.animate(withDuration: 1) {
+            self.view.backgroundColor = slider.chosenColor
+        }
     }
     
     private func setupIncrementButton() {
@@ -78,13 +130,14 @@ final class WelcomeViewController: UIViewController {
     @objc
     private func incrementButtonPressed() {
         value += 1
-        
+        commentView.isHidden=false
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
         
-        UIView.animate(withDuration: 2){
+        UIView.animate(withDuration: 1) {
             self.updateUI()
         }
+        
     }
     
     private func setupValueLabel() {
@@ -105,7 +158,6 @@ final class WelcomeViewController: UIViewController {
     
     
     private func setupCommentView() -> UIView {
-        let commentView = UIView()
         commentView.backgroundColor = .white
         commentView.layer.cornerRadius = 12
         view.addSubview(commentView)
